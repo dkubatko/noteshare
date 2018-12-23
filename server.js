@@ -14,7 +14,7 @@ function handleClass(req, res) {
 };
 
 function handleAdd( req, res) {
-    res.send("<!DOCTYPE html><html><head></head><body><p>You made it</p></body></html>")
+    res.sendFile(path.join(__dirname + '/frontend/addClass.html'));
 }
 
 app.get('/', handleRoot);
