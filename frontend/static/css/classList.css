@@ -6,6 +6,15 @@ body {
 button {
     width: 10em;
 }
+
+a {
+    background-color: #f6f6f6;
+    padding: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    color: black;
+    display: block
+}
 .container {
     display: flex;
     flex-direction: column;
@@ -25,15 +34,38 @@ button {
     flex: 1;
     text-align: center;
     border: 1px solid;
+    margin-right: -1px;
+    margin-bottom: -1px;
 }
 
 .course-name {
+    flex: 4;
     text-align: center;
-    flex: 3;
     border: 1px solid;
+    margin-right: -1px;
+    margin-bottom: -1px;
+}
+
+.note-count {
+    text-align: center;
+    flex: 1;
+    border: 1px solid;
+    margin-bottom: -1px;
+}
+
+#header {
+    font-weight: bold;
 }
 
 #button-container {
     flex-direction: row;
     justify-content: space-around;
+}
+
+#input {
+    width: 85%;
+    padding: 12px 20px 12px 40px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    margin-bottom: 12px;
 }
