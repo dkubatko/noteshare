@@ -14,5 +14,8 @@
   * [Flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)
 2. Express
   * [Official guide](https://expressjs.com/en/guide/routing.html)
+  * [File upload](https://www.npmjs.com/package/express-fileupload)
 3. MongoDB
   * [GridFs file storage](https://docs.mongodb.com/manual/core/gridfs/)
+4. Articles
+  * [File upload](https://medium.com/@TheJesseLewis/how-to-make-a-basic-html-form-file-upload-using-multer-in-an-express-node-js-app-16dac2476610)
