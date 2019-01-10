@@ -19,3 +19,5 @@
   * [GridFs file storage](https://docs.mongodb.com/manual/core/gridfs/)
 4. Articles
   * [File upload](https://medium.com/@TheJesseLewis/how-to-make-a-basic-html-form-file-upload-using-multer-in-an-express-node-js-app-16dac2476610)
+# Meetings
+1. Set up an add course page with iterative lecture PDF upload
