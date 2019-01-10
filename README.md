@@ -14,3 +14,5 @@
   * [Flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)
 2. Express
   * [Official guide](https://expressjs.com/en/guide/routing.html)
+3. MongoDB
+  * [GridFs file storage](https://docs.mongodb.com/manual/core/gridfs/)
