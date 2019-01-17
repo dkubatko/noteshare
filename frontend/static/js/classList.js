@@ -1,16 +1,42 @@
+let results = {};
+let added_data = false;
+
 $(document).ready(function() {
-    let head = document.getElementById('header');
-    let courses = document.querySelectorAll('.course:not(#header)');
-    hideCourses(head, courses);
+    $.ajax({
+        type: "GET",
+        url: "http://127.0.0.1:3000/get-data",
+        success: function(result) {
+            results = result; 
+        }  
+    });
 
     $('#input').on('input', function() {
+        if (!added_data) {
+            for (let i=0; i<results['class_no'].length; i+=1) {
+                let code = '<div class="course">' + 
+                           '<div class="course-no">' + 
+                           '<a href="#">' + results['class_no'][i] + '</a>' + 
+                           '</div>' + 
+                           '<div class="course-name">' + 
+                           '<a href="#">' + results['class_name'][i] + '</a>' +
+                           '</div>' + 
+                           '<div class="note-count">' +
+                           '<a href="#">' + results['note_count'][i] + '</a>' + 
+                           '</div>' + 
+                           '</div>';
+                $('#courses').append(code);
+            }
+            added_data = true;
+            hideCourses($('#header')[0], $('.course:not(#header)'));
+        }
+/*
         if ($(this).val()=='') {
-            hideCourses(head, courses);
+            hideCourses($('#header')[0], $('.course:not(#header)'));
             return;
         }
         let count = 0;
         let value = $(this).val().toUpperCase();
-        courses.forEach( function(course) {
+        $('.course:not(#header)').each( function(course) {
             let a = course.querySelector('.course-no').getElementsByTagName('a')[0];
             let txtValue = a.innerText || a.textContent; // returns A if A is true, else B
             if (txtValue.toUpperCase().indexOf(value) > -1) {
@@ -20,7 +46,8 @@ $(document).ready(function() {
                 course.style.display = 'none';
             }
         });
-        head.style.display = (count > 0) ? 'flex' : 'none';
+        $('#header')[0].style.display = (count > 0) ? 'flex' : 'none';
+        */
     });
     $('#back').click( function() {
         document.location.href = '/';
@@ -28,7 +55,10 @@ $(document).ready(function() {
     $('#add').click( function() {
         document.location.href = '/add-course';
     });
+
 });
+
+
 
 /**
  * @param {element} head
@@ -36,7 +66,7 @@ $(document).ready(function() {
  */
 function hideCourses(head, courses) {
     head.style.display = 'none';
-    courses.forEach( function(course) {
+    courses.each( function(course) {
         course.style.display = 'none';
     });
 }
