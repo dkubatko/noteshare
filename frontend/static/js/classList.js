@@ -1,12 +1,19 @@
-let results = {};
 let added_data = false;
 
 $(document).ready(function() {
     $.ajax({
         type: "GET",
-        url: "http://127.0.0.1:3000/get-data",
+        url: "http://127.0.0.1:3000/get_classes",
         success: function(result) {
-            results = result; 
+            console.log(result);
+            result.classes.forEach(element => {
+                courseNoDiv = "<div class='course-no'>" + element.number + "</div>";
+                courseNameDiv = "<div class='course-name'>" + element.name + "</div>";
+                courseNoteCountDiv = "<div class='note-count'>" + 0 + "</div>";
+                $("#header").append(courseNoDiv);
+                $("#header").append(courseNameDiv);
+                $("#header").append(courseNoteCountDiv);
+            });
         }  
     });
 

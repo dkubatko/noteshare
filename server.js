@@ -1,21 +1,27 @@
 const express = require('express');
 const fs = require('fs');
 const qs = require('querystring');
+const bodyParser = require('body-parser');
 var path = require('path');
 const app = express();
 const port = 3000;
 
-var classNo = ["CSE 11", "CSE 12"];
-var className = ["Intro to CS", "Algorithms"];
+var classes = [
+    {"number": "CSE11", "name": "Intro to CS"},
+    {"number": "CSE12", "name": "Algorithms"}
+];
+
 var noteCount = [1, 2];
 
 app.use(express.static(__dirname + '/frontend/'));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 function handleRoot(req, res) {
     res.sendFile(path.join(__dirname + '/frontend/home.html'));
 };
 
-function handleClass(req, res) {
+function handleClassList(req, res) {
+    console.log(classes);
     res.sendFile(path.join(__dirname + '/frontend/classList.html'));
 };
 
@@ -28,32 +34,23 @@ function handleCourses(req, res) {
     res.send(data);
 }
 
-function handleAddedClass(req, res) {
+function handleAddClass(req, res) {
     if (req.method == 'POST') {
-        var body = '';
-
-        req.on('data', function(data) {
-            body += data;
-            // Too much POST data, kill the connection!
-            // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
-            if (body.length > 1e6)
-                req.connection.destroy();
-        });
-
-        req.on('end', function() {
-            var post = qs.parse(body);
-            classNo.push(post.class_no);
-            className.push(post.class_name);
-            res.redirect('/class-list');
-        });
+        var body = req.body;
+        var added_cl = {
+            "name": req.body.class_name,
+            "number": req.body.class_no
+        }
+        classes.push(added_cl)
+        res.redirect('/class-list');
     }
 }
 
-function handleGetData(req, res) {
-    let data = {};
-    data['class_no'] = classNo;
-    data['class_name'] = className;
-    data['note_count'] = noteCount;
+function handleGetClasses(req, res) {
+    let data = {
+        "classes": classes,
+        "count": classes.length
+    }
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(data);
 }
@@ -62,15 +59,15 @@ function handleGetData(req, res) {
 
 app.get('/', handleRoot);
 
-app.get('/class-list', handleClass);
+app.get('/class-list', handleClassList);
 
 app.get('/add-course', handleAdd);
 
-app.post('/added-class', handleAddedClass);
+app.post('/add_class', handleAddClass);
 
 app.get('/courses', handleCourses);
 
-app.get('/get-data', handleGetData);
+app.get('/get_classes', handleGetClasses);
 
 
 app.listen(port, () => console.log(`Example app listening on port ${port}...`));
