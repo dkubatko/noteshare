@@ -6,17 +6,14 @@ $(document).ready(function() {
         url: "http://127.0.0.1:3000/get_classes",
         success: function(result) {
             console.log(result);
-            result.classes.forEach(element => {
-                courseNoDiv = "<div class='course-no'>" + element.number + "</div>";
-                courseNameDiv = "<div class='course-name'>" + element.name + "</div>";
-                courseNoteCountDiv = "<div class='note-count'>" + 0 + "</div>";
-                $("#header").append(courseNoDiv);
-                $("#header").append(courseNameDiv);
-                $("#header").append(courseNoteCountDiv);
+            result.classes.forEach(function(course) {
+                $('#courses').append('<tr><td>' + course.number + '</td>' + 
+                    '<td>' + course.name + '</td>' + 
+                    '<td>' + course.count + '</td></tr>');
             });
         }  
     });
-
+/*
     $('#input').on('input', function() {
         if (!added_data) {
             for (let i=0; i<results['class_no'].length; i+=1) {
@@ -36,7 +33,7 @@ $(document).ready(function() {
             added_data = true;
             hideCourses($('#header')[0], $('.course:not(#header)'));
         }
-/*
+
         if ($(this).val()=='') {
             hideCourses($('#header')[0], $('.course:not(#header)'));
             return;
@@ -54,13 +51,14 @@ $(document).ready(function() {
             }
         });
         $('#header')[0].style.display = (count > 0) ? 'flex' : 'none';
-        */
+        
     });
+    */
     $('#back').click( function() {
         document.location.href = '/';
     });
     $('#add').click( function() {
-        document.location.href = '/add-course';
+        document.location.href = '/add_course';
     });
 
 });

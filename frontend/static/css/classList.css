@@ -22,35 +22,14 @@ a {
     align-items: center;
 }
 
-.course {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 85%;
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
 }
 
-.course-no {
-    flex: 1;
+th, td {
+    padding: 5px;
     text-align: center;
-    border: 1px solid;
-    margin-right: -1px;
-    margin-bottom: -1px;
-}
-
-.course-name {
-    flex: 4;
-    text-align: center;
-    border: 1px solid;
-    margin-right: -1px;
-    margin-bottom: -1px;
-}
-
-.note-count {
-    text-align: center;
-    flex: 1;
-    border: 1px solid;
-    margin-bottom: -1px;
 }
 
 #header {

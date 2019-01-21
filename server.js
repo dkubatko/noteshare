@@ -7,11 +7,10 @@ const app = express();
 const port = 3000;
 
 var classes = [
-    {"number": "CSE11", "name": "Intro to CS"},
-    {"number": "CSE12", "name": "Algorithms"}
+    {"number": "CSE11", "name": "Intro to CS", "count": 1},
+    {"number": "CSE12", "name": "Algorithms", "count": 2}
 ];
 
-var noteCount = [1, 2];
 
 app.use(express.static(__dirname + '/frontend/'));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -25,24 +24,20 @@ function handleClassList(req, res) {
     res.sendFile(path.join(__dirname + '/frontend/classList.html'));
 };
 
-function handleAdd(req, res) {
+function handleAddCourse(req, res) {
     res.sendFile(path.join(__dirname + '/frontend/addClass.html'));
 }
 
-function handleCourses(req, res) {
-    var data = ["cse100", "bild12"];
-    res.send(data);
-}
-
-function handleAddClass(req, res) {
+function handleSendCourse(req, res) {
     if (req.method == 'POST') {
         var body = req.body;
         var added_cl = {
             "name": req.body.class_name,
-            "number": req.body.class_no
+            "number": req.body.class_no,
+            "count": 0
         }
         classes.push(added_cl)
-        res.redirect('/class-list');
+        res.redirect('/class_list');
     }
 }
 
@@ -59,13 +54,11 @@ function handleGetClasses(req, res) {
 
 app.get('/', handleRoot);
 
-app.get('/class-list', handleClassList);
+app.get('/class_list', handleClassList);
 
-app.get('/add-course', handleAdd);
+app.get('/add_course', handleAddCourse);
 
-app.post('/add_class', handleAddClass);
-
-app.get('/courses', handleCourses);
+app.post('/send_course', handleSendCourse);
 
 app.get('/get_classes', handleGetClasses);
 
