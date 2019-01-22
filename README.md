@@ -21,3 +21,10 @@
   * [File upload](https://medium.com/@TheJesseLewis/how-to-make-a-basic-html-form-file-upload-using-multer-in-an-express-node-js-app-16dac2476610)
 # Meetings
 1. Set up an add course page with iterative lecture PDF upload
+2. 
+  * Regex for class number [A-Z][0-9]
+  * Search for notes on the class_list page
+  * Set up a test env variable and use it in code
+3. 
+  * [MongoDB setup](https://www.tutorialspoint.com/mongodb/)
+
