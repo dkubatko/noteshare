@@ -11,6 +11,7 @@ $(document).ready(function() {
                     '<td>' + course.name + '</td>' + 
                     '<td>' + course.count + '</td></tr>');
             });
+            hideCourses($('#head')[0], $('tr:not(#head)'));
         }  
     });
 /*
@@ -70,8 +71,8 @@ $(document).ready(function() {
  * @param {array} courses 
  */
 function hideCourses(head, courses) {
-    head.style.display = 'none';
-    courses.each( function(course) {
-        course.style.display = 'none';
-    });
+    head.style = 'display:none';
+    for (let i = 0; i < courses.length; i++) {
+        courses[i].style = 'display: none';
+    }
 }
