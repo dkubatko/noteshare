@@ -7,12 +7,12 @@
         <link rel="stylesheet" type="text/css" href="static/css/addClass.css">
     </head>
     <body>
-        <form action="/send_course" method="POST">
+        <form action="/send_course" method="POST" onsubmit="return validateForm()">
             Class Number:<br>
-            <input type="text" name="class_no"><br>
+            <input id="class_no" type="text" name="class_no"><br>
             Class Name:<br>
-            <input type="text" name="class_name" ><br>
-            <input type="submit" value="Submit">
+            <input id="class_name" type="text" name="class_name" ><br>
+            <input id="submit" type="submit" value="Submit">
           </form>
     </body>
 </html>

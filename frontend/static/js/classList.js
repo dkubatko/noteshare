@@ -7,54 +7,32 @@ $(document).ready(function() {
         success: function(result) {
             console.log(result);
             result.classes.forEach(function(course) {
-                $('#courses').append('<tr><td>' + course.number + '</td>' + 
-                    '<td>' + course.name + '</td>' + 
-                    '<td>' + course.count + '</td></tr>');
+                $('#courses').append('<tr><td class="number">' + course.number + '</td>' + 
+                    '<td class="name">' + course.name + '</td>' + 
+                    '<td class="count">' + course.count + '</td></tr>');
             });
             hideCourses($('#head')[0], $('tr:not(#head)'));
         }  
     });
-/*
     $('#input').on('input', function() {
-        if (!added_data) {
-            for (let i=0; i<results['class_no'].length; i+=1) {
-                let code = '<div class="course">' + 
-                           '<div class="course-no">' + 
-                           '<a href="#">' + results['class_no'][i] + '</a>' + 
-                           '</div>' + 
-                           '<div class="course-name">' + 
-                           '<a href="#">' + results['class_name'][i] + '</a>' +
-                           '</div>' + 
-                           '<div class="note-count">' +
-                           '<a href="#">' + results['note_count'][i] + '</a>' + 
-                           '</div>' + 
-                           '</div>';
-                $('#courses').append(code);
-            }
-            added_data = true;
-            hideCourses($('#header')[0], $('.course:not(#header)'));
-        }
-
         if ($(this).val()=='') {
-            hideCourses($('#header')[0], $('.course:not(#header)'));
+            hideCourses($('#head')[0], $('tr:not(#head)'));
             return;
         }
         let count = 0;
         let value = $(this).val().toUpperCase();
-        $('.course:not(#header)').each( function(course) {
-            let a = course.querySelector('.course-no').getElementsByTagName('a')[0];
-            let txtValue = a.innerText || a.textContent; // returns A if A is true, else B
-            if (txtValue.toUpperCase().indexOf(value) > -1) {
-                course.style.display = 'flex';
-                count+=1;
+        let course_numbers = $('.number');
+        for (let i = 0; i < course_numbers.length; i++) {
+            let textValue = course_numbers[i].innerText || course_numbers[0].textContent;
+            if (textValue.toUpperCase().indexOf(value) > -1) {
+                course_numbers[i].parentElement.style = 'display: content';
+                count++;
             } else {
-                course.style.display = 'none';
+                course_numbers[i].parentElement.style = 'display: none';
             }
-        });
-        $('#header')[0].style.display = (count > 0) ? 'flex' : 'none';
-        
+        }
+        $('#head')[0].style = (count > 0) ? 'display: content' : 'display: none';
     });
-    */
     $('#back').click( function() {
         document.location.href = '/';
     });
