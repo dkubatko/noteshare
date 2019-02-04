@@ -5,10 +5,11 @@ const bodyParser = require('body-parser');
 var path = require('path');
 const app = express();
 const port = 3000;
-const note = process.env.NOTESHARE;
 
+/*
+const note = process.env.NOTESHARE;
 const MongoClient = require('mongodb').MongoClient;
-const uri = note;
+const uri = 'mongodb+srv://user:${note}@noteshare-z8f3l.mongodb.net/test?retryWrites=true';
 const client = new MongoClient(uri, { useNewUrlParser: true });
 client.connect(function(err, db) {
     if (err) {
@@ -25,6 +26,22 @@ client.connect(function(err, db) {
         });
         db.close();
     }
+});
+*/
+
+var MongoClient = require('mongodb').MongoClient;
+
+// Connection URL
+var url = 'mongodb://localhost:27017/noteshare';
+// Use connect method to connect to the Server
+MongoClient.connect(url, function(err, db) {
+  if (err) {
+      console.log("MongoDB Connection Failed");
+  } else {
+      console.log("MongoDB Connection Successful");
+  }
+
+  db.close();
 });
 
 var classes = [

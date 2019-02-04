@@ -14,10 +14,17 @@ $(document).ready( function() {
 
 function validateForm() {
     var classRegex = RegExp('([A-Z]+)([0-9]+)');
-    if (classRegex.test($('#class_no').val()) && $('#class_no').val() != '') {
+    let valid_no = classRegex.test($('#class_no').val());
+    let valid_name = $('#class_name').val().length > 0;
+    if (valid_no && valid_name) {
         return true;
     }
-    $('#class_no').val('');
-    $('#class_name').val('');
+    if (!valid_no) {
+        alert("Invalid class number\nFormat: ABC123");
+        $('#class_no').val('');
+    } else if (!valid_name) {
+        alert("Invalid class name");
+        $('#class_name').val('');
+    }
     return false;
 }

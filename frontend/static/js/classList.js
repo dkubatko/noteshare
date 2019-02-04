@@ -11,12 +11,12 @@ $(document).ready(function() {
                     '<td class="name">' + course.name + '</td>' + 
                     '<td class="count">' + course.count + '</td></tr>');
             });
-            hideCourses($('#head')[0], $('tr:not(#head)'));
+            showCourses($('#head')[0], $('tr:not(#head)'));
         }  
     });
     $('#input').on('input', function() {
         if ($(this).val()=='') {
-            hideCourses($('#head')[0], $('tr:not(#head)'));
+            showCourses($('#head')[0], $('tr:not(#head)'));
             return;
         }
         let count = 0;
@@ -48,9 +48,9 @@ $(document).ready(function() {
  * @param {element} head
  * @param {array} courses 
  */
-function hideCourses(head, courses) {
-    head.style = 'display:none';
+function showCourses(head, courses) {
+    head.style = 'display: content';
     for (let i = 0; i < courses.length; i++) {
-        courses[i].style = 'display: none';
+        courses[i].style = 'display: content';
     }
 }
