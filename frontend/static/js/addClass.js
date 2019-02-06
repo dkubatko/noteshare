@@ -1,20 +1,9 @@
 $(document).ready( function() {
-    var prevClassNo = '';
-    $('#class_no').on( "change paste keyup", function() {
-        console.log(classRegex);
-        console.log($(this).val());
-        console.log(classRegex.test($(this).val()));
-        if (classRegex.test($(this).val())) {
-            prevClassNo = $(this).val();
-        } else {
-            $(this).val(prevClassNo);
-        }
-    });
 });
 
 function validateForm() {
     var classRegex = RegExp('([A-Z]+)([0-9]+)');
-    let valid_no = classRegex.test($('#class_no').val());
+    let valid_no = classRegex.test($('#class_no').val()) && $('#class_no').val().split(" ").length == 1;
     let valid_name = $('#class_name').val().length > 0;
     if (valid_no && valid_name) {
         return true;
