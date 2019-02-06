@@ -31,23 +31,72 @@ client.connect(function(err, db) {
 
 var MongoClient = require('mongodb').MongoClient;
 
+var classes = [];
+
+var notes = [];
+
 // Connection URL
-var url = 'mongodb://localhost:27017/noteshare';
+var url = 'mongodb://localhost:27017/';
 // Use connect method to connect to the Server
 MongoClient.connect(url, function(err, db) {
-  if (err) {
+    if (err) {
       console.log("MongoDB Connection Failed");
-  } else {
-      console.log("MongoDB Connection Successful");
-  }
+    } else {
+        console.log("MongoDB Connection Successful");
+        let dbo = db.db('noteshare');
+        dbo.collection('classes').find({'number' : 'CSE11'}).toArray(function(err, result) {
+            if (err) {
+                console.log("MongoDB Find CSE 11 Error")
+            } else {
+                if (result.length == 0) {
+                    dbo.collection('classes').insertOne({number : 'CSE11', name : 'Intro to CS'}, function(err, res) {
+                        if (err) {
+                            console.log("MongoDB Insert CSE 11 Error");
+                            throw err;
+                        } else {
+                            console.log("MongoDB Inserted CSE 11");
+                        }
+                    })
+                } else {
+                    console.log("CSE 11 Exists");
+                }
+            }
+        });
+      
+        dbo.collection('classes').find({'number' : 'CSE12'}).toArray(function(err, result) {
+            if (err) {
+                console.log("MongoDB Find CSE 12 Error")
+            } else {
+                if (result.length == 0) {
+                    dbo.collection('classes').insertOne({'number' : 'CSE12', 'name' : 'Algorithms'}, function(err, res) {
+                        if (err) {
+                            console.log("MongoDB Insert CSE 12 Error");
+                        } else {
+                            console.log("MongoDB Inserted CSE 12");
+                        }
+                    });
+                } else {
+                    console.log("CSE 12 Exists");
+                }
+            }
+        });
 
-  db.close();
+        //Query through the existing classes
+        dbo.collection('classes').find({}).toArray(function(err, result) {
+            if (err) {
+                console.log("MongoDB Query All Classes Error");
+            } else {
+                console.log(result.length);
+                for (var i = 0; i < result.length; i++) {
+                    classes.push({number : result[i].number, name : result[i].name});
+                }
+                console.log(classes);
+                db.close();
+                console.log("MongoDB Closed Successfully"); 
+            }
+        });
+    }
 });
-
-var classes = [
-    {"number": "CSE11", "name": "Intro to CS", "count": 1},
-    {"number": "CSE12", "name": "Algorithms", "count": 2}
-];
 
 
 app.use(express.static(__dirname + '/frontend/'));
@@ -69,13 +118,41 @@ function handleAddCourse(req, res) {
 
 function handleSendCourse(req, res) {
     if (req.method == 'POST') {
-        var body = req.body;
         var added_cl = {
             "name": req.body.class_name,
             "number": req.body.class_no,
             "count": 0
         }
-        classes.push(added_cl)
+        classes.push(added_cl);
+        //Add to database
+        MongoClient.connect(url, function(err, db) {
+            if (err) {
+                console.log("MongoDB Add Class Error");
+            } else {
+                console.log("MongoDB Connection Success");
+                let dbo = db.db('noteshare');
+                dbo.collection('classes').insertOne({'number' : req.body.class_no, 'name' : req.body.class_name}, function(err, res) {
+                    if (err) {
+                        console.log("MongoDB Insert Class Error");
+                    } else {
+                        console.log("MongoDB Insert Class Successful");
+                    }
+                });
+
+                dbo.collection('classes').find({}).toArray(function(err, res) {
+                    if (err) {
+                        console.log("MongoDB Find Error");
+                    } else {
+                        console.log(res.length);
+                        for (let i = 0; i < res.length; i++) {
+                            console.log(res);
+                        }
+                        db.close();
+                        console.log("MongoDB Closed Successfully");
+                    }
+                });
+            }
+        });
         res.redirect('/class_list');
     }
 }
