@@ -1,5 +1,3 @@
-let added_data = false;
-
 $(document).ready(function() {
     $.ajax({
         type: "GET",
