@@ -1,9 +1,17 @@
 const express = require('express');
 const fs = require('fs');
 const qs = require('querystring');
+const fileUpload = require('express-fileupload')
 const bodyParser = require('body-parser');
+const uuidv4 = require('uuid/v4');
 var path = require('path');
+const mongodb = require('mongodb');
+var formidable = require('formidable');
 const app = express();
+app.use(fileUpload({
+    useTempFiles : true,
+    tempFileDir : '/tmp/'
+}));
 const port = 3000;
 
 /*
@@ -49,7 +57,7 @@ MongoClient.connect(url, function(err, db) {
                 console.log("MongoDB Find CSE 11 Error")
             } else {
                 if (result.length == 0) {
-                    dbo.collection('classes').insertOne({number : 'CSE11', name : 'Intro to CS'}, function(err, res) {
+                    dbo.collection('classes').insertOne({'number' : 'CSE11', 'name' : 'Intro to CS', 'uuid' : uuidv4()}, function(err, res) {
                         if (err) {
                             console.log("MongoDB Insert CSE 11 Error");
                             throw err;
@@ -68,7 +76,7 @@ MongoClient.connect(url, function(err, db) {
                 console.log("MongoDB Find CSE 12 Error")
             } else {
                 if (result.length == 0) {
-                    dbo.collection('classes').insertOne({'number' : 'CSE12', 'name' : 'Algorithms'}, function(err, res) {
+                    dbo.collection('classes').insertOne({'number' : 'CSE12', 'name' : 'Algorithms', 'uuid' : uuidv4()}, function(err, res) {
                         if (err) {
                             console.log("MongoDB Insert CSE 12 Error");
                         } else {
@@ -88,7 +96,7 @@ MongoClient.connect(url, function(err, db) {
             } else {
                 console.log(result.length);
                 for (var i = 0; i < result.length; i++) {
-                    classes.push({number : result[i].number, name : result[i].name});
+                    classes.push({number : result[i].number, name : result[i].name, uuid : result[i].uuid});
                 }
                 console.log(classes);
                 db.close();
@@ -118,10 +126,11 @@ function handleAddCourse(req, res) {
 
 function handleSendCourse(req, res) {
     if (req.method == 'POST') {
+        var newUUID = uuidv4();
         var added_cl = {
             "name": req.body.class_name,
             "number": req.body.class_no,
-            "count": 0
+            "uuid" : newUUID
         }
         classes.push(added_cl);
         //Add to database
@@ -131,7 +140,7 @@ function handleSendCourse(req, res) {
             } else {
                 console.log("MongoDB Connection Success");
                 let dbo = db.db('noteshare');
-                dbo.collection('classes').insertOne({'number' : req.body.class_no, 'name' : req.body.class_name}, function(err, res) {
+                dbo.collection('classes').insertOne({'number' : req.body.class_no, 'name' : req.body.class_name, 'uuid' : newUUID}, function(err, res) {
                     if (err) {
                         console.log("MongoDB Insert Class Error");
                     } else {
@@ -166,6 +175,82 @@ function handleGetClasses(req, res) {
     res.send(data);
 }
 
+function handleAddNote(req, res) {
+    res.sendFile(path.join(__dirname + '/frontend/addNote.html'));
+}
+
+function handleSendNote(req, res) {
+    var noteObject = JSON.parse(req.body.class_name);
+    var courseID = noteObject["uuid"];
+    var courseName = noteObject["name"];
+    console.log(courseID);
+    console.log(courseName);
+    var uuid = uuidv4();
+    console.log(req.files);
+    //Query for ID name
+
+    var noteObject = {
+        "uuid" : uuid,
+        "class_uuid" : courseID,
+        "class_name" : courseName,
+        "note_name" : req.files['note']['name'],
+        "data" : req.files['note']['data']
+    }
+    console.log(noteObject);
+    //Add to note database
+    /*
+    MongoClient.connect(url, function(err, db) {
+        if (err) {
+            console.log("MongoDB Add Note Error");
+        } else {
+            console.log("MongoDB Connection Success");
+            let dbo = db.db('noteshare');
+            dbo.collection('notes').insertOne(noteObject, function(err) {
+                if (err) {
+                    console.log("MongoDB Add Note Error");
+                } else {
+                    console.log("MongoDB Add Note Successful");
+                }
+            });
+            db.close();
+            console.log("MongoDB Closed Successfully");
+        }
+    });
+    */
+    MongoClient.connect(url, function(err, db) {
+    let dbo = db.db('noteshare');
+    var bucket = new mongodb.GridFSBucket(dbo);
+  
+    fs.createReadStream('./resume.pdf').
+      pipe(bucket.openUploadStream('resume.pdf')).
+      on('error', function(err) {
+          console.log("ERRRERRRORRRR");
+      }).
+      on('finish', function() {
+        console.log('done!');
+        process.exit(0);
+      });
+  });
+    res.redirect('/class_list');
+}
+
+function handleTestDownload(req, res) {
+    MongoClient.connect(url, function(err, db) {
+        let dbo = db.db('noteshare');
+        var bucket = new mongodb.GridFSBucket(dbo);
+      
+        bucket.openDownloadStreamByName('resume.pdf').
+          pipe(fs.createWriteStream('download.pdf')).
+          on('error', function(err) {
+              console.log("ERRRERRRORRRR");
+          }).
+          on('finish', function() {
+            console.log('done!');
+            process.exit(0);
+          });
+      });
+      res.redirect('/class_list');
+}
 
 
 app.get('/', handleRoot);
@@ -178,5 +263,10 @@ app.post('/send_course', handleSendCourse);
 
 app.get('/get_classes', handleGetClasses);
 
+app.get('/add_note', handleAddNote);
+
+app.post('/send_note', handleSendNote);
+
+app.get('/test_download', handleTestDownload);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}...`));
