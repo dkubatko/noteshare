@@ -28,4 +28,4 @@
 3. 
   * [MongoDB setup](https://www.tutorialspoint.com/mongodb/)
   * [Agile development board](https://trello.com/)
-
+4. * [Static files serve](https://expressjs.com/en/starter/static-files.html)
