@@ -208,8 +208,6 @@ function handleSendNote(req, res) {
     var uuid = uuidv4();
     console.log(req.files);
 
-    //Query for ID name
-
     var noteObject = {
         "uuid" : uuid,
         "class_uuid" : courseID,
@@ -252,8 +250,9 @@ function handleSendNote(req, res) {
         //process.exit(0);
       });
   });
-    shell.rm('-r', 'tmp/*');
-    res.redirect('/class_list');
+    //shell.rm('-r', 'tmp/*');
+    notes.push({uuid : noteObject.uuid, class_uuid : noteObject.class_uuid, class_name : noteObject.class_name, note_name : noteObject.note_name});
+    res.redirect('/');
 }
 
 function handleListNotes(req, res) {

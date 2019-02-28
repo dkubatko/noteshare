@@ -5,8 +5,8 @@ $(document).ready(function() {
         success: function(result) {
             console.log(result);
             result.classes.forEach(function(course) {
-                $('#courses').append('<tr><td class="number">' + course.number + '</td>' + 
-                    '<td class="name">' + course.name + '</td>' + 
+                $('#courses').append('<tr><td class="number"> <a href="/">' + course.number + '</a> </td>' + 
+                    '<td class="name"> <a href="/list_notes?class=' + course.name + '">' + course.name + '</a> </td>' + 
                     '<td class="count">' + course.count + '</td></tr>');
             });
             showCourses($('#head')[0], $('tr:not(#head)'));
