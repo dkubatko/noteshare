@@ -7,10 +7,11 @@ const uuidv4 = require('uuid/v4');
 var path = require('path');
 const mongodb = require('mongodb');
 var formidable = require('formidable');
+var shell = require("shelljs");
 const app = express();
 app.use(fileUpload({
     useTempFiles : true,
-    tempFileDir : '/tmp/'
+    tempFileDir : './tmp/'
 }));
 const port = 3000;
 
@@ -50,7 +51,7 @@ MongoClient.connect(url, function(err, db) {
     if (err) {
       console.log("MongoDB Connection Failed");
     } else {
-        console.log("MongoDB Connection Successful");
+        //console.log("MongoDB Connection Successful");
         let dbo = db.db('noteshare');
         dbo.collection('classes').find({'number' : 'CSE11'}).toArray(function(err, result) {
             if (err) {
@@ -62,11 +63,11 @@ MongoClient.connect(url, function(err, db) {
                             console.log("MongoDB Insert CSE 11 Error");
                             throw err;
                         } else {
-                            console.log("MongoDB Inserted CSE 11");
+                            //console.log("MongoDB Inserted CSE 11");
                         }
                     })
                 } else {
-                    console.log("CSE 11 Exists");
+                    //console.log("CSE 11 Exists");
                 }
             }
         });
@@ -80,11 +81,11 @@ MongoClient.connect(url, function(err, db) {
                         if (err) {
                             console.log("MongoDB Insert CSE 12 Error");
                         } else {
-                            console.log("MongoDB Inserted CSE 12");
+                            //console.log("MongoDB Inserted CSE 12");
                         }
                     });
                 } else {
-                    console.log("CSE 12 Exists");
+                    //console.log("CSE 12 Exists");
                 }
             }
         });
@@ -94,13 +95,24 @@ MongoClient.connect(url, function(err, db) {
             if (err) {
                 console.log("MongoDB Query All Classes Error");
             } else {
-                console.log(result.length);
+                //console.log(result.length);
                 for (var i = 0; i < result.length; i++) {
                     classes.push({number : result[i].number, name : result[i].name, uuid : result[i].uuid});
                 }
-                console.log(classes);
-                db.close();
-                console.log("MongoDB Closed Successfully"); 
+                //console.log(classes); 
+            }
+        });
+
+        //Query through the existing classes
+        dbo.collection('notes').find({}).toArray(function(err, result) {
+            if (err) {
+                console.log("MongoDB Query All Notes Error");
+            } else {
+                //console.log(result.length);
+                for (var i = 0; i < result.length; i++) {
+                    notes.push({uuid : result[i].uuid, class_uuid : result[i].class_uuid, class_name : result[i].class_name, note_name : result[i].note_name});
+                }
+                //console.log(notes);
             }
         });
     }
@@ -111,12 +123,33 @@ app.use(express.static(__dirname + '/frontend/'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 function handleRoot(req, res) {
-    console.log(process.env.NOTESHARE);
+    //console.log(process.env.NOTESHARE);
+    console.log(notes);
+    console.log(classes);
+            //Download to server directory
+    MongoClient.connect(url, function(err, db) {
+        if (err) {
+            console.log("MongoDB Connection Failed");
+        } else {
+            let dbo = db.db('noteshare');
+            var bucket = new mongodb.GridFSBucket(dbo);
+            for (var i = 0; i < notes.length; i++) {
+                bucket.openDownloadStreamByName(notes[i].note_name).
+                    pipe(fs.createWriteStream('notes/' + notes[i].note_name)).
+                    on('error', function(err) {
+                        console.log("Download Note Error");
+                    }).
+                    on('finish', function() {
+                        console.log('Download Note Successful');
+                    });
+            }
+        }
+    });    
     res.sendFile(path.join(__dirname + '/frontend/home.html'));
 };
 
 function handleClassList(req, res) {
-    console.log(classes);
+    //console.log(classes);
     res.sendFile(path.join(__dirname + '/frontend/classList.html'));
 };
 
@@ -144,22 +177,9 @@ function handleSendCourse(req, res) {
                     if (err) {
                         console.log("MongoDB Insert Class Error");
                     } else {
-                        console.log("MongoDB Insert Class Successful");
+                        //console.log("MongoDB Insert Class Successful");
                     }
-                });
-
-                dbo.collection('classes').find({}).toArray(function(err, res) {
-                    if (err) {
-                        console.log("MongoDB Find Error");
-                    } else {
-                        console.log(res.length);
-                        for (let i = 0; i < res.length; i++) {
-                            console.log(res);
-                        }
-                        db.close();
-                        console.log("MongoDB Closed Successfully");
-                    }
-                });
+                });   
             }
         });
         res.redirect('/class_list');
@@ -183,10 +203,11 @@ function handleSendNote(req, res) {
     var noteObject = JSON.parse(req.body.class_name);
     var courseID = noteObject["uuid"];
     var courseName = noteObject["name"];
-    console.log(courseID);
-    console.log(courseName);
+    //console.log(courseID);
+    //console.log(courseName);
     var uuid = uuidv4();
     console.log(req.files);
+
     //Query for ID name
 
     var noteObject = {
@@ -194,11 +215,11 @@ function handleSendNote(req, res) {
         "class_uuid" : courseID,
         "class_name" : courseName,
         "note_name" : req.files['note']['name'],
-        "data" : req.files['note']['data']
+        "tmp_name" : req.files['note']['tempFilePath'].substring(4),
+        "data" : req.files.note.data
     }
     console.log(noteObject);
-    //Add to note database
-    /*
+    //Add to note database   
     MongoClient.connect(url, function(err, db) {
         if (err) {
             console.log("MongoDB Add Note Error");
@@ -216,42 +237,28 @@ function handleSendNote(req, res) {
             console.log("MongoDB Closed Successfully");
         }
     });
-    */
+    
     MongoClient.connect(url, function(err, db) {
     let dbo = db.db('noteshare');
     var bucket = new mongodb.GridFSBucket(dbo);
   
-    fs.createReadStream('./resume.pdf').
-      pipe(bucket.openUploadStream('resume.pdf')).
+    fs.createReadStream('./tmp/' + noteObject.tmp_name).
+      pipe(bucket.openUploadStream(noteObject.note_name)).
       on('error', function(err) {
-          console.log("ERRRERRRORRRR");
+          console.log("Upload Note Errro");
       }).
       on('finish', function() {
-        console.log('done!');
-        process.exit(0);
+        console.log('Upload Note Successful');
+        //process.exit(0);
       });
   });
+    shell.rm('-r', 'tmp/*');
     res.redirect('/class_list');
 }
 
-function handleTestDownload(req, res) {
-    MongoClient.connect(url, function(err, db) {
-        let dbo = db.db('noteshare');
-        var bucket = new mongodb.GridFSBucket(dbo);
-      
-        bucket.openDownloadStreamByName('resume.pdf').
-          pipe(fs.createWriteStream('download.pdf')).
-          on('error', function(err) {
-              console.log("ERRRERRRORRRR");
-          }).
-          on('finish', function() {
-            console.log('done!');
-            process.exit(0);
-          });
-      });
-      res.redirect('/class_list');
+function handleListNotes(req, res) {
+    res.sendFile(path.join(__dirname + '/frontend/listNotes.html'));
 }
-
 
 app.get('/', handleRoot);
 
@@ -267,6 +274,6 @@ app.get('/add_note', handleAddNote);
 
 app.post('/send_note', handleSendNote);
 
-app.get('/test_download', handleTestDownload);
+app.get('/list_notes', handleListNotes);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}...`));
