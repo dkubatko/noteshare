@@ -259,6 +259,23 @@ function handleListNotes(req, res) {
     res.sendFile(path.join(__dirname + '/frontend/listNotes.html'));
 }
 
+function handleGetNotes(req, res) {
+    let data = {
+        "notes": [],
+        "count": 0
+    }
+    console.log(req.query);
+    console.log(req.query.class);
+    for (let i = 0; i < notes.length; i++) {
+        if (notes[i].class_name == req.query.class) {
+            data.notes.push(notes[i]);
+            data.count++;
+        }
+    }
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(data); 
+}
+
 app.get('/', handleRoot);
 
 app.get('/class_list', handleClassList);
@@ -274,5 +291,7 @@ app.get('/add_note', handleAddNote);
 app.post('/send_note', handleSendNote);
 
 app.get('/list_notes', handleListNotes);
+
+app.get('/get_notes', handleGetNotes);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}...`));
