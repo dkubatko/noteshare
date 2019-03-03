@@ -120,6 +120,7 @@ MongoClient.connect(url, function(err, db) {
 
 
 app.use(express.static(__dirname + '/frontend/'));
+app.use(express.static(__dirname + '/notes/'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 function handleRoot(req, res) {
@@ -135,7 +136,7 @@ function handleRoot(req, res) {
             var bucket = new mongodb.GridFSBucket(dbo);
             for (var i = 0; i < notes.length; i++) {
                 bucket.openDownloadStreamByName(notes[i].note_name).
-                    pipe(fs.createWriteStream('notes/' + notes[i].note_name)).
+                    pipe(fs.createWriteStream('notes/' + notes[i].uuid)).
                     on('error', function(err) {
                         console.log("Download Note Error");
                     }).
@@ -231,8 +232,6 @@ function handleSendNote(req, res) {
                     console.log("MongoDB Add Note Successful");
                 }
             });
-            db.close();
-            console.log("MongoDB Closed Successfully");
         }
     });
     
@@ -243,7 +242,7 @@ function handleSendNote(req, res) {
     fs.createReadStream('./tmp/' + noteObject.tmp_name).
       pipe(bucket.openUploadStream(noteObject.note_name)).
       on('error', function(err) {
-          console.log("Upload Note Errro");
+          console.log("Upload Note Error");
       }).
       on('finish', function() {
         console.log('Upload Note Successful');
@@ -252,7 +251,7 @@ function handleSendNote(req, res) {
   });
     //shell.rm('-r', 'tmp/*');
     notes.push({uuid : noteObject.uuid, class_uuid : noteObject.class_uuid, class_name : noteObject.class_name, note_name : noteObject.note_name});
-    res.redirect('/');
+    res.redirect('/class_list');
 }
 
 function handleListNotes(req, res) {
@@ -276,6 +275,11 @@ function handleGetNotes(req, res) {
     res.send(data); 
 }
 
+function handleNote(req, res) {
+    console.log(req.query);
+    res.sendFile(path.join(__dirname + '/notes/' + req.query.note));
+}
+
 app.get('/', handleRoot);
 
 app.get('/class_list', handleClassList);
@@ -293,5 +297,7 @@ app.post('/send_note', handleSendNote);
 app.get('/list_notes', handleListNotes);
 
 app.get('/get_notes', handleGetNotes);
+
+app.get('/note', handleNote);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}...`));
