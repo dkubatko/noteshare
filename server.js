@@ -135,18 +135,20 @@ function handleRoot(req, res) {
             let dbo = db.db('noteshare');
             var bucket = new mongodb.GridFSBucket(dbo);
             for (var i = 0; i < notes.length; i++) {
-                bucket.openDownloadStreamByName(notes[i].note_name).
+                //if (dbo.collection('notes').count({'uuid' : notes[i].uuid}) == 0) {
+                    bucket.openDownloadStreamByName(notes[i].note_name).
                     pipe(fs.createWriteStream('notes/' + notes[i].uuid)).
                     on('error', function(err) {
                         console.log("Download Note Error");
                     }).
                     on('finish', function() {
                         console.log('Download Note Successful');
+                        res.sendFile(path.join(__dirname + '/frontend/home.html'));
                     });
+                //}
             }
         }
     });    
-    res.sendFile(path.join(__dirname + '/frontend/home.html'));
 };
 
 function handleClassList(req, res) {
@@ -251,7 +253,7 @@ function handleSendNote(req, res) {
   });
     //shell.rm('-r', 'tmp/*');
     notes.push({uuid : noteObject.uuid, class_uuid : noteObject.class_uuid, class_name : noteObject.class_name, note_name : noteObject.note_name});
-    res.redirect('/class_list');
+    res.redirect('/');
 }
 
 function handleListNotes(req, res) {
@@ -277,7 +279,10 @@ function handleGetNotes(req, res) {
 
 function handleNote(req, res) {
     console.log(req.query);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment');
     res.sendFile(path.join(__dirname + '/notes/' + req.query.note));
+
 }
 
 app.get('/', handleRoot);
