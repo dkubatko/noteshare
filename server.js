@@ -96,12 +96,29 @@ MongoClient.connect(url, function(err, db) {
                 console.log("MongoDB Query All Classes Error");
             } else {
                 //console.log(result.length);
+                let counter = [];
                 for (var i = 0; i < result.length; i++) {
-                    classes.push({number : result[i].number, name : result[i].name, uuid : result[i].uuid});
+                    let course_notes = dbo.collection('notes').find({'class_uuid' : result[i].uuid});
+                    course_notes.count(function(err, num) {
+                        if (err) {
+                            console.log("Count Error");
+                        } else {
+                            console.log(num);
+                            counter.push(num);
+                        }
+                    });
                 }
-                //console.log(classes); 
+                console.log(counter);
+                //console.log(classes);
+                while (counter.length == 0) {
+                    
+                }
+                for (let x = 0; x < result.length; x++) {
+                    classes.push({number : result[x].number, name : result[x].name, uuid : result[x].uuid, count : counter[x]});
+                } 
             }
         });
+
 
         //Query through the existing classes
         dbo.collection('notes').find({}).toArray(function(err, result) {
@@ -127,6 +144,7 @@ function handleRoot(req, res) {
     //console.log(process.env.NOTESHARE);
     console.log(notes);
     console.log(classes);
+    
             //Download to server directory
     MongoClient.connect(url, function(err, db) {
         if (err) {
@@ -134,21 +152,36 @@ function handleRoot(req, res) {
         } else {
             let dbo = db.db('noteshare');
             var bucket = new mongodb.GridFSBucket(dbo);
-            for (var i = 0; i < notes.length; i++) {
-                //if (dbo.collection('notes').count({'uuid' : notes[i].uuid}) == 0) {
-                    bucket.openDownloadStreamByName(notes[i].note_name).
-                    pipe(fs.createWriteStream('notes/' + notes[i].uuid)).
-                    on('error', function(err) {
-                        console.log("Download Note Error");
-                    }).
-                    on('finish', function() {
-                        console.log('Download Note Successful');
+            dbo.collection('notes').find({}).toArray(function(err, result) {
+                if (err) {
+                    conaole.log("Mongo Error");
+                }
+                for (let i = 0; i < result.length; i++) {
+                    let note_uuid = result[i].uuid;
+                    let found = false;
+                    for (let j = 0; j < notes.length; j++) {
+                        if (notes[j].uuid == note_uuid) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        console.log(result[i].uuid);
+                        bucket.openDownloadStreamByName(result[i].note_name).
+                        pipe(fs.createWriteStream('notes/' + result[i].uuid)).
+                        on('error', function(err) {
+                            console.log("Download Note Error");
+                        }).
+                        on('finish', function() {
+                                console.log('Download Note Successful');
                         res.sendFile(path.join(__dirname + '/frontend/home.html'));
-                    });
-                //}
-            }
+                        });
+                    }
+                }
+            });
         }
-    });    
+    });   
+   res.sendFile(path.join(__dirname + '/frontend/home.html'));
 };
 
 function handleClassList(req, res) {
@@ -279,8 +312,8 @@ function handleGetNotes(req, res) {
 
 function handleNote(req, res) {
     console.log(req.query);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment');
+    //res.setHeader('Content-Type', 'application/pdf');
+    //res.setHeader('Content-Disposition', 'attachment');
     res.sendFile(path.join(__dirname + '/notes/' + req.query.note));
 
 }
