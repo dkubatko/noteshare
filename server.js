@@ -15,36 +15,97 @@ app.use(fileUpload({
 }));
 const port = 3000;
 
-/*
-const note = process.env.NOTESHARE;
-const MongoClient = require('mongodb').MongoClient;
-const uri = 'mongodb+srv://user:${note}@noteshare-z8f3l.mongodb.net/test?retryWrites=true';
-const client = new MongoClient(uri, { useNewUrlParser: true });
-client.connect(function(err, db) {
-    if (err) {
-        console.log("MongoDB Connecion Failed");
-    } else {
-        var dbo = db.db('Noteshare');
-        var query = {Note: "Hello World"};
-        dbo.collection("Notes").find(query).toArray( function(err, result) {
-            if (err) {
-                console.log("Query Error");
-            } else {
-                console.log(result);
-            }
-        });
-        db.close();
-    }
-});
-*/
 
-var MongoClient = require('mongodb').MongoClient;
+const note = process.env.NOTESHARE;
+console.log("loggin " + note);
 
 var classes = [];
 
 var notes = [];
 
-// Connection URL
+
+const MongoClient = require('mongodb').MongoClient;
+const uri = 'mongodb+srv://user:' + note + '@noteshare-z8f3l.mongodb.net/test?retryWrites=true';
+const client = new MongoClient(uri, { useNewUrlParser: true });
+client.connect(function(err, db) {
+    if (err) {
+        console.log("MongoDB Connection Failed");
+      } else {
+          //console.log("MongoDB Connection Successful");
+          let dbo = db.db('Noteshare');
+          dbo.collection('Classes').find({'number' : 'CSE11'}).toArray(function(err, result) {
+              if (err) {
+                  console.log("MongoDB Find CSE 11 Error")
+              } else {
+                  if (result.length == 0) {
+                      dbo.collection('Classes').insertOne({'number' : 'CSE11', 'name' : 'Intro to CS', 'uuid' : uuidv4()}, function(err, res) {
+                          if (err) {
+                              console.log("MongoDB Insert CSE 11 Error");
+                              throw err;
+                          } else {
+                              console.log("MongoDB Inserted CSE 11");
+                          }
+                      })
+                  } else {
+                      console.log("CSE 11 Exists");
+                  }
+              }
+          });
+        
+          dbo.collection('Classes').find({'number' : 'CSE12'}).toArray(function(err, result) {
+              if (err) {
+                  console.log("MongoDB Find CSE 12 Error")
+              } else {
+                  if (result.length == 0) {
+                      dbo.collection('Classes').insertOne({'number' : 'CSE12', 'name' : 'Algorithms', 'uuid' : uuidv4()}, function(err, res) {
+                          if (err) {
+                              console.log("MongoDB Insert CSE 12 Error");
+                          } else {
+                              console.log("MongoDB Inserted CSE 12");
+                          }
+                      });
+                  } else {
+                      console.log("CSE 12 Exists");
+                  }
+              }
+          });
+  
+          //Query through the existing classes
+          dbo.collection('Classes').find({}).toArray(function(err, result) {
+              if (err) {
+                  console.log("MongoDB Query All Classes Error");
+              } else {
+                  //console.log(result.length);
+                  for (var i = 0; i < result.length; i++) {
+                      classes.push({number : result[i].number, name : result[i].name, uuid : result[i].uuid});
+                  }
+                  console.log(classes); 
+              }
+          });
+  
+          //Query through the existing classes
+          dbo.collection('Notes').find({}).toArray(function(err, result) {
+              if (err) {
+                  console.log("MongoDB Query All Notes Error");
+              } else {
+                  console.log(result.length);
+                  for (var i = 0; i < result.length; i++) {
+                      notes.push({uuid : result[i].uuid, class_uuid : result[i].class_uuid, class_name : result[i].class_name, note_name : result[i].note_name});
+                  }
+                  console.log(notes);
+              }
+          });
+
+
+      }
+});
+
+
+//var MongoClient = require('mongodb').MongoClient;
+
+
+
+/* // Connection URL
 var url = 'mongodb://localhost:27017/';
 // Use connect method to connect to the Server
 MongoClient.connect(url, function(err, db) {
@@ -117,7 +178,7 @@ MongoClient.connect(url, function(err, db) {
         });
     }
 });
-
+ */
 
 app.use(express.static(__dirname + '/frontend/'));
 app.use(express.static(__dirname + '/notes/'));
@@ -128,11 +189,11 @@ function handleRoot(req, res) {
     console.log(notes);
     console.log(classes);
             //Download to server directory
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(uri, function(err, db) {
         if (err) {
             console.log("MongoDB Connection Failed");
         } else {
-            let dbo = db.db('noteshare');
+            let dbo = db.db('Noteshare');
             var bucket = new mongodb.GridFSBucket(dbo);
             for (var i = 0; i < notes.length; i++) {
                 bucket.openDownloadStreamByName(notes[i].note_name).
@@ -168,13 +229,13 @@ function handleSendCourse(req, res) {
         }
         classes.push(added_cl);
         //Add to database
-        MongoClient.connect(url, function(err, db) {
+        MongoClient.connect(uri, function(err, db) {
             if (err) {
                 console.log("MongoDB Add Class Error");
             } else {
                 console.log("MongoDB Connection Success");
-                let dbo = db.db('noteshare');
-                dbo.collection('classes').insertOne({'number' : req.body.class_no, 'name' : req.body.class_name, 'uuid' : newUUID}, function(err, res) {
+                let dbo = db.db('Noteshare');
+                dbo.collection('Classes').insertOne({'number' : req.body.class_no, 'name' : req.body.class_name, 'uuid' : newUUID}, function(err, res) {
                     if (err) {
                         console.log("MongoDB Insert Class Error");
                     } else {
@@ -219,13 +280,13 @@ function handleSendNote(req, res) {
     }
     console.log(noteObject);
     //Add to note database   
-    MongoClient.connect(url, function(err, db) {
+    MongoClient.connect(uri, function(err, db) {
         if (err) {
             console.log("MongoDB Add Note Error");
         } else {
             console.log("MongoDB Connection Success");
-            let dbo = db.db('noteshare');
-            dbo.collection('notes').insertOne(noteObject, function(err) {
+            let dbo = db.db('Noteshare');
+            dbo.collection('Notes').insertOne(noteObject, function(err) {
                 if (err) {
                     console.log("MongoDB Add Note Error");
                 } else {
@@ -235,8 +296,8 @@ function handleSendNote(req, res) {
         }
     });
     
-    MongoClient.connect(url, function(err, db) {
-    let dbo = db.db('noteshare');
+    MongoClient.connect(uri, function(err, db) {
+    let dbo = db.db('Noteshare');
     var bucket = new mongodb.GridFSBucket(dbo);
   
     fs.createReadStream('./tmp/' + noteObject.tmp_name).
