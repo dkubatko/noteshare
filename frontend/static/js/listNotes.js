@@ -18,4 +18,8 @@ $(document).ready( function() {
             }
         }
     });
+
+    $("#addNoteButton").click( function() {
+        document.location.href = "/add_note?class="+ classURL;
+    });
 });

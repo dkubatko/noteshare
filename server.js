@@ -17,7 +17,6 @@ const port = 3000;
 
 
 const note = process.env.NOTESHARE;
-console.log("loggin " + note);
 
 var classes = [];
 
@@ -375,7 +374,8 @@ function handleNote(req, res) {
     console.log(req.query);
     //res.setHeader('Content-Type', 'application/pdf');
     //res.setHeader('Content-Disposition', 'attachment');
-    res.sendFile(path.join(__dirname + '/notes/' + req.query.note));
+    console.log(__dirname);
+    res.sendFile(path.join(__dirname, 'notes', req.query.note));
 
 }
 
