@@ -8,11 +8,27 @@ var path = require('path');
 const mongodb = require('mongodb');
 var formidable = require('formidable');
 var shell = require("shelljs");
+var Promise = require('bluebird');
+// Imports the Google Cloud client library
+const {Storage} = require('@google-cloud/storage');
+ 
+
 const app = express();
+
 app.use(fileUpload({
     useTempFiles : true,
     tempFileDir : './tmp/'
 }));
+
+ // Creates a client
+ const storage = new Storage({
+     projectId: 'noteshare',
+     keyFilename: 'noteshare-c8ce1ca41a8d.json'
+ });
+
+var BUCKET_NAME = 'my-bucket';
+var myBucket = storage.bucket(BUCKET_NAME);
+
 const port = 3000;
 
 
@@ -81,21 +97,19 @@ client.connect(function(err, db) {
                   console.log(classes); 
               }
           });
-  
+
           //Query through the existing classes
           dbo.collection('Notes').find({}).toArray(function(err, result) {
-              if (err) {
-                  console.log("MongoDB Query All Notes Error");
-              } else {
-                  console.log(result.length);
-                  for (var i = 0; i < result.length; i++) {
-                      notes.push({uuid : result[i].uuid, class_uuid : result[i].class_uuid, class_name : result[i].class_name, note_name : result[i].note_name});
-                  }
-                  console.log(notes);
-              }
-          });
-
-
+            if (err) {
+                console.log("MongoDB Query All Notes Error");
+            } else {
+                console.log(result.length);
+                for (var i = 0; i < result.length; i++) {
+                    notes.push({uuid : result[i].uuid, class_uuid : result[i].class_uuid, class_name : result[i].class_name, note_name : result[i].note_name});
+                }
+                console.log(notes);
+            }
+        });
       }
 });
 
@@ -212,33 +226,16 @@ function handleRoot(req, res) {
         } else {
             let dbo = db.db('Noteshare');
             var bucket = new mongodb.GridFSBucket(dbo);
-            dbo.collection('notes').find({}).toArray(function(err, result) {
-                if (err) {
-                    conaole.log("Mongo Error");
-                }
-                for (let i = 0; i < result.length; i++) {
-                    let note_uuid = result[i].uuid;
-                    let found = false;
-                    for (let j = 0; j < notes.length; j++) {
-                        if (notes[j].uuid == note_uuid) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        console.log(result[i].uuid);
-                        bucket.openDownloadStreamByName(result[i].note_name).
-                        pipe(fs.createWriteStream('notes/' + result[i].uuid)).
-                        on('error', function(err) {
-                            console.log("Download Note Error");
-                        }).
-                        on('finish', function() {
-                                console.log('Download Note Successful');
-                        res.sendFile(path.join(__dirname + '/frontend/home.html'));
-                        });
-                    }
-                }
-            });
+            for ( var i = 0; i < notes.length; i++) {
+                bucket.openDownloadStreamByName(notes[i].note_name)
+                .pipe(fs.createWriteStream('notes/' + notes[i].uuid))
+                .on('error', function(err) {
+                    console.log("Download Error");
+                })
+                .on('finish', function() {
+                    console.log("Downloaded Note");
+                });
+            }
         }
     });   
    res.sendFile(path.join(__dirname + '/frontend/home.html'));
@@ -309,10 +306,11 @@ function handleSendNote(req, res) {
         "class_uuid" : courseID,
         "class_name" : courseName,
         "note_name" : req.files['note']['name'],
-        "tmp_name" : req.files['note']['tempFilePath'].substring(4),
-        "data" : req.files.note.data
+        "data" : req.files.note.data,
+        "tmp_name" : req.files['note']['tempFilePath'].substring(4)
     }
     console.log(noteObject);
+
     //Add to note database   
     MongoClient.connect(uri, function(err, db) {
         if (err) {
@@ -374,9 +372,8 @@ function handleNote(req, res) {
     console.log(req.query);
     //res.setHeader('Content-Type', 'application/pdf');
     //res.setHeader('Content-Disposition', 'attachment');
-    console.log(__dirname);
+    //console.log(__dirname);
     res.sendFile(path.join(__dirname, 'notes', req.query.note));
-
 }
 
 app.get('/', handleRoot);
