@@ -48,3 +48,13 @@ th, td {
     border: 1px solid #ddd;
     margin-bottom: 12px;
 }
+
+div.center {
+    text-align: center;
+}
+
+#title {
+    font-size: 2.5em;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    font-weight: 300;
+}

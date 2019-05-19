@@ -13,8 +13,8 @@ $(document).ready( function() {
         success: function(result) {
             console.log(result);
             for (let i = 0; i < result.notes.length; i++) {
-                let queryURL = result.notes[i].uuid;
-                $('#notes').append('<a href="/note?note=' + queryURL + '">' + result.notes[i].note_name + '</a><br>');
+                let queryURL = result.notes[i].note_url;
+                $('#notes').append('<a href="' + queryURL + '" target="_blank">' + result.notes[i].note_name + '</a><br>');
             }
         }
     });
