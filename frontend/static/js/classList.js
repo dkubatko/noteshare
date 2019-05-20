@@ -5,13 +5,36 @@ $(document).ready(function() {
         success: function(result) {
             console.log(result);
             result.classes.forEach(function(course) {
-                $('#courses').append('<tr><td class="number"> <a href="/">' + course.number + '</a> </td>' + 
-                    '<td class="name"> <a href="/list_notes?class=' + course.name + '">' + course.name + '</a> </td>' + 
-                    '<td class="count">' + course.count + '</td></tr>');
+                var classURL = "/class_list?class=";
+                var classNameSplit = course.name.split(" ");
+                $.each(classNameSplit, function(index, value) {
+                    classURL += value + '~';
+                });
+                classURL = classURL.substring(0, classURL.length-1);
+                $('#courses').append('<tr><td class="number"> <a href= ' + classURL + '>' + course.number + '</a> </td></tr>');
             });
             showCourses($('#head')[0], $('tr:not(#head)'));
         }  
     });
+
+    var queryURLClass = new URLSearchParams(window.location.search).get("class");
+    if (queryURLClass != null) {
+        $.ajax({
+            type: "GET",
+            url: "http://127.0.0.1:3000/get_notes?class=" + queryURLClass,
+            success: function(result) {
+                console.log(result);
+                for (let i = 0; i < result.notes.length; i++) {
+                    let noteURL = result.notes[i].note_url;
+                    let lectureTopic = result.notes[i].lecture_topic;
+                    let lectureDate = result.notes[i].lecture_date;
+                    $('#notes').append('<tr><td><a href="' + noteURL + '" target="_blank">' + lectureTopic + '</a></td><td>' + lectureDate + '</td></tr>');
+                }
+            }
+        });
+    }
+
+
     $('#input').on('input', function() {
         if ($(this).val()=='') {
             showCourses($('#head')[0], $('tr:not(#head)'));

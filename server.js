@@ -8,7 +8,6 @@ var path = require('path');
 const mongodb = require('mongodb');
 var formidable = require('formidable');
 var shell = require("shelljs");
-var Promise = require('bluebird');
 // Imports the Google Cloud client library
 const {Storage} = require('@google-cloud/storage');
  

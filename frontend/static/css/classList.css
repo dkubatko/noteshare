@@ -1,10 +1,15 @@
 body {
     background-color: lightcyan;
     height: 100vh;
+    margin: 0;
 }
 
 button {
     width: 10em;
+}
+
+.center {
+    text-align: center;
 }
 
 a {
@@ -13,23 +18,50 @@ a {
     text-decoration: none;
     font-size: 14px;
     color: black;
-    display: block
+    display: block;
 }
 .container {
     display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+.class_container {
+    width: 40%;
+    height: 90vh;
+    display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
+}
+
+.note_container {
+    width: 60%;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
 }
 
 table, th, td {
     border: 1px solid black;
     border-collapse: collapse;
+    margin: 0 auto;
 }
 
 th, td {
     padding: 5px;
     text-align: center;
+}
+
+th#topic_column {
+    width: 80%;
+}
+
+th#date_column {
+    width: 20%;
 }
 
 #header {
@@ -42,7 +74,7 @@ th, td {
 }
 
 #input {
-    width: 85%;
+    width: 50%;
     padding: 12px 20px 12px 40px;
     font-size: 16px;
     border: 1px solid #ddd;
@@ -53,8 +85,32 @@ div.center {
     text-align: center;
 }
 
-#title {
+.title {
     font-size: 2.5em;
     font-family: "Comic Sans MS", cursive, sans-serif;
     font-weight: 300;
+}
+
+ul {
+    list-style: none;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: rgb(76, 159, 207);
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+#fixed_nav_container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.vertical_scroll {
+    height: 50%;
+    overflow-y: scroll;
 }

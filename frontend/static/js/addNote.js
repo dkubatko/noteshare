@@ -1,12 +1,15 @@
 $(document).ready( function() {
     var queryURL = new URLSearchParams(window.location.search);
-    var class_name = queryURL.get("class").split(" ");
-    var classURL = "";
-    $.each(class_name, function(index, value) {
-        classURL += value + '~';
-    });
-    classURL = classURL.substring(0, classURL.length-1);
-    console.log("CLASS URL: " + classURL);
+    var class_name = queryURL.get("class")
+    if ( class_name != null ) {
+        class_name = class_name.split(" ");
+        var classURL = "";
+        $.each(class_name, function(index, value) {
+            classURL += value + '~';
+        });
+        classURL = classURL.substring(0, classURL.length-1);
+        console.log("CLASS URL: " + classURL);
+    }
 
     $.ajax({
         type: "GET",
