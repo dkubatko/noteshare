@@ -15,7 +15,7 @@ $(document).ready( function() {
         type: "GET",
         url: "http://127.0.0.1:3000/get_classes",
         success: function(result) {
-            console.log("SUCCESSS " + result);
+            console.log("SUCCESS " + result);
             result.classes.forEach(function(course) {
                 var courseNameArr = course.name.split(" ");
                 var courseName = "";

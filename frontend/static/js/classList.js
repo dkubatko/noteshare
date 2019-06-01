@@ -63,7 +63,7 @@ $(document).ready(function() {
 
     $('#input').on('input', function() {
         if ($(this).val()=='') {
-            showCourses($('#head')[0], $('tr:not(#head)'));
+            showCourses($('.head')[0], $('tr:not(.head)'));
             return;
         }
         let count = 0;
@@ -80,10 +80,15 @@ $(document).ready(function() {
         }
         $('#head')[0].style = (count > 0) ? 'display: content' : 'display: none';
     });
-    $('#back').click( function() {
-        document.location.href = '/';
+    $('#add_note').click( function() {
+        var queryURLClass = new URLSearchParams(window.location.search).get("class");
+        if (queryURLClass != null) {
+            document.location.href = '/add_note?class=' + queryURLClass;
+        } else {
+            document.location.href = '/add_note';
+        }
     });
-    $('#add').click( function() {
+    $('#add_course').click( function() {
         document.location.href = '/add_course';
     });
 
