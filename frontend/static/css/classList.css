@@ -28,7 +28,16 @@ a {
 }
 
 .class_container {
-    width: 40%;
+    width: 20%;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.department_container {
+    width: 20%;
     height: 90vh;
     display: flex;
     flex-direction: column;
@@ -114,3 +123,4 @@ ul {
     height: 50%;
     overflow-y: scroll;
 }
+

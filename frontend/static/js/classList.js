@@ -4,6 +4,7 @@ $(document).ready(function() {
         url: "http://127.0.0.1:3000/get_classes",
         success: function(result) {
             console.log(result);
+            var usedDepartments = [];
             result.classes.forEach(function(course) {
                 var classURL = "/class_list?class=";
                 var classNameSplit = course.name.split(" ");
@@ -11,7 +12,12 @@ $(document).ready(function() {
                     classURL += value + '~';
                 });
                 classURL = classURL.substring(0, classURL.length-1);
-                $('#courses').append('<tr><td class="number"> <a href= ' + classURL + '>' + course.number + '</a> </td></tr>');
+                var depURL = "/class_list?dep=" + course.department;
+                //$('#courses').append('<tr><td class="number"> <a href= ' + classURL + '>' + course.number + '</a> </td></tr>');
+                if (!usedDepartments.includes(course.department)) {
+                    $('#department').append('<tr><td class="number"> <a href= ' + depURL + '>' + course.department + '</a> </td></tr>');
+                    usedDepartments.push(course.department);
+                }
             });
             showCourses($('#head')[0], $('tr:not(#head)'));
         }  
@@ -29,6 +35,26 @@ $(document).ready(function() {
                     let lectureTopic = result.notes[i].lecture_topic;
                     let lectureDate = result.notes[i].lecture_date;
                     $('#notes').append('<tr><td><a href="' + noteURL + '" target="_blank">' + lectureTopic + '</a></td><td>' + lectureDate + '</td></tr>');
+                }
+            }
+        });
+    }
+
+    var queryURLDep = new URLSearchParams(window.location.search).get("dep");
+    if (queryURLDep != null) {
+        $.ajax({
+            type: "GET",
+            url: "http://127.0.0.1:3000/get_courses_by_department?dep=" + queryURLDep,
+            success: function(result) {
+                console.log(result);
+                for (let i = 0; i < result.courses.length; i++) {
+                    var classURL = "/class_list?class=";
+                    var classNameSplit = result.courses[i].name.split(" ");
+                    $.each(classNameSplit, function(index, value) {
+                        classURL += value + '~';
+                    });
+                    classURL = classURL.substring(0, classURL.length-1);
+                    $('#courses').append('<tr><td class="number"> <a href= ' + classURL + '>' + result.courses[i].number + '</a> </td></tr>');
                 }
             }
         });

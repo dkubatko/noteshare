@@ -48,43 +48,6 @@ client.connect(function(err, db) {
       } else {
           //console.log("MongoDB Connection Successful");
           let dbo = db.db('Noteshare');
-          dbo.collection('Classes').find({'number' : 'CSE11'}).toArray(function(err, result) {
-              if (err) {
-                  console.log("MongoDB Find CSE 11 Error")
-              } else {
-                  if (result.length == 0) {
-                      dbo.collection('Classes').insertOne({'number' : 'CSE11', 'name' : 'Intro to CS', 'uuid' : uuidv4()}, function(err, res) {
-                          if (err) {
-                              console.log("MongoDB Insert CSE 11 Error");
-                              throw err;
-                          } else {
-                              console.log("MongoDB Inserted CSE 11");
-                          }
-                      })
-                  } else {
-                      console.log("CSE 11 Exists");
-                  }
-              }
-          });
-        
-          dbo.collection('Classes').find({'number' : 'CSE12'}).toArray(function(err, result) {
-              if (err) {
-                  console.log("MongoDB Find CSE 12 Error")
-              } else {
-                  if (result.length == 0) {
-                      dbo.collection('Classes').insertOne({'number' : 'CSE12', 'name' : 'Algorithms', 'uuid' : uuidv4()}, function(err, res) {
-                          if (err) {
-                              console.log("MongoDB Insert CSE 12 Error");
-                          } else {
-                              console.log("MongoDB Inserted CSE 12");
-                          }
-                      });
-                  } else {
-                      console.log("CSE 12 Exists");
-                  }
-              }
-          });
-  
           //Query through the existing classes
           dbo.collection('Classes').find({}).toArray(function(err, result) {
               if (err) {
@@ -92,7 +55,7 @@ client.connect(function(err, db) {
               } else {
                   //console.log(result.length);
                   for (var i = 0; i < result.length; i++) {
-                      classes.push({number : result[i].number, name : result[i].name, uuid : result[i].uuid});
+                      classes.push({department: result[i].department, number : result[i].number, name : result[i].name, uuid : result[i].uuid});
                   }
                   console.log(classes); 
               }
@@ -141,6 +104,7 @@ function handleSendCourse(req, res) {
         var added_cl = {
             "name": req.body.class_name,
             "number": req.body.class_no,
+            "department": req.body.department,
             "uuid" : newUUID
         }
         classes.push(added_cl);
@@ -151,7 +115,7 @@ function handleSendCourse(req, res) {
             } else {
                 console.log("MongoDB Connection Success");
                 let dbo = db.db('Noteshare');
-                dbo.collection('Classes').insertOne({'number' : req.body.class_no, 'name' : req.body.class_name, 'uuid' : newUUID}, function(err, res) {
+                dbo.collection('Classes').insertOne({'department' : req.body.department, 'number' : req.body.class_no, 'name' : req.body.class_name, 'uuid' : newUUID}, function(err, res) {
                     if (err) {
                         console.log("MongoDB Insert Class Error");
                     } else {
@@ -259,6 +223,21 @@ function handleGetNotes(req, res) {
     res.send(data); 
 }
 
+function handleGetCoursesByDepartment(req, res) {
+    let data = {
+        "courses" : [],
+        "count" : 0
+    }
+    for (let i = 0; i < classes.length; i++) {
+        if ( classes[i].department == req.query.dep) {
+            data.courses.push(classes[i]);
+            data.count++;
+        }
+    }
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(data); 
+}
+
 function handleNote(req, res) {
     console.log(req.query);
     //res.setHeader('Content-Type', 'application/pdf');
@@ -286,5 +265,7 @@ app.get('/list_notes', handleListNotes);
 app.get('/get_notes', handleGetNotes);
 
 app.get('/note', handleNote);
+
+app.get('/get_courses_by_department', handleGetCoursesByDepartment);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}...`));
