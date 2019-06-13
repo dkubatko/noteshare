@@ -209,17 +209,27 @@ function handleListNotes(req, res) {
 function handleGetNotes(req, res) {
     let data = {
         "notes": [],
-        "count": 0
+        "count": 0,
+        "class_num": -1
     }
     console.log(req.query);
     console.log(req.query.class);
     for (let i = 0; i < notes.length; i++) {
         if (notes[i].class_name == req.query.class) {
+            if ( data.class_num == -1 ) {
+                for (let j = 0; j < classes.length; j++) {
+                    if (classes[j].uuid == notes[i].class_uuid) {
+                        data.class_num = classes[j].number;
+                        break;
+                    }
+                }
+            }
             data.notes.push(notes[i]);
             data.count++;
         }
     }
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     res.send(data); 
 }
 

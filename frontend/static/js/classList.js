@@ -23,32 +23,22 @@ $(document).ready(function() {
         }  
     });
 
-    var queryURLClass = new URLSearchParams(window.location.search).get("class");
-    if (queryURLClass != null) {
-        $.ajax({
-            type: "GET",
-            url: "http://127.0.0.1:3000/get_notes?class=" + queryURLClass,
-            success: function(result) {
-                console.log(result);
-                for (let i = 0; i < result.notes.length; i++) {
-                    let noteURL = result.notes[i].note_url;
-                    let lectureTopic = result.notes[i].lecture_topic;
-                    let lectureDate = result.notes[i].lecture_date;
-                    $('#notes').append('<tr><td><a href="' + noteURL + '" target="_blank">' + lectureTopic + '</a></td><td>' + lectureDate + '</td></tr>');
-                }
-            }
-        });
-    }
-
+    
     var queryURLDep = new URLSearchParams(window.location.search).get("dep");
     if (queryURLDep != null) {
         $.ajax({
             type: "GET",
             url: "http://127.0.0.1:3000/get_courses_by_department?dep=" + queryURLDep,
             success: function(result) {
-                console.log(result);
+                departments= $('#department').find("td");
+                for (let i = 0; i < departments.length; i++) {
+                    if (departments[i].innerText == queryURLDep) {
+                        departments[i].style.backgroundColor = "#6699FF";
+                        break;
+                    }   
+                }
                 for (let i = 0; i < result.courses.length; i++) {
-                    var classURL = "/class_list?class=";
+                    var classURL = "/class_list?dep=" + queryURLDep + "&class=";
                     var classNameSplit = result.courses[i].name.split(" ");
                     $.each(classNameSplit, function(index, value) {
                         classURL += value + '~';
@@ -56,10 +46,35 @@ $(document).ready(function() {
                     classURL = classURL.substring(0, classURL.length-1);
                     $('#courses').append('<tr><td class="number"> <a href= ' + classURL + '>' + result.courses[i].number + '</a> </td></tr>');
                 }
+
+                var queryURLClass = new URLSearchParams(window.location.search).get("class");
+                if (queryURLClass != null) {
+                    $.ajax({
+                        type: "GET",
+                        url: "http://127.0.0.1:3000/get_notes?class=" + queryURLClass,
+                        success: function(result) {
+                            for (let i = 0; i < result.notes.length; i++) {
+                                let noteURL = result.notes[i].note_url;
+                                let lectureTopic = result.notes[i].lecture_topic;
+                                let lectureDate = result.notes[i].lecture_date;
+                                $('#notes').append('<tr><td><a href="' + noteURL + '" target="_blank">' + lectureTopic + '</a></td><td>' + lectureDate + '</td></tr>');
+                            }
+                            courses = $('#courses').find("td");
+                            console.log(courses);
+                            console.log(result)
+                            for (let i = 0; i < courses.length; i++) {
+                                if (courses[i].innerText == result.class_num) {
+                                    courses[i].style.backgroundColor = "#6699FF";
+                                    break;
+                                }   
+                            }
+            
+                        }
+                    });
+                }
             }
         });
     }
-
 
     $('#input').on('input', function() {
         if ($(this).val()=='') {
@@ -105,4 +120,9 @@ function showCourses(head, courses) {
     for (let i = 0; i < courses.length; i++) {
         courses[i].style = 'display: content';
     }
+}
+
+function fun() {
+    console.log("TESTTT");
+    return true;
 }
