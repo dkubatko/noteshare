@@ -15,7 +15,7 @@ $(document).ready(function() {
                 var depURL = "/class_list?dep=" + course.department;
                 //$('#courses').append('<tr><td class="number"> <a href= ' + classURL + '>' + course.number + '</a> </td></tr>');
                 if (!usedDepartments.includes(course.department)) {
-                    $('#department').append('<tr><td class="number"> <a href= ' + depURL + '>' + course.department + '</a> </td></tr>');
+                    $('#department').append('<tr><td class="dep"> <a href= ' + depURL + '>' + course.department + '</a> </td></tr>');
                     usedDepartments.push(course.department);
                 }
             });
@@ -81,20 +81,49 @@ $(document).ready(function() {
             showCourses($('.head')[0], $('tr:not(.head)'));
             return;
         }
-        let count = 0;
+        
         let value = $(this).val().toUpperCase();
-        let course_numbers = $('.number');
-        for (let i = 0; i < course_numbers.length; i++) {
-            let textValue = course_numbers[i].innerText || course_numbers[0].textContent;
-            if (textValue.toUpperCase().indexOf(value) > -1) {
-                course_numbers[i].parentElement.style = 'display: content';
-                count++;
-            } else {
-                course_numbers[i].parentElement.style = 'display: none';
+        console.log(value.search(/\d/))
+        let index = (value.search(/\d/) > -1) ? value.search(/\d/) : value.length;
+        let department_val = value.substring(0, index);
+        let course_val = value.substring(index);
+        console.log(department_val )
+        console.log(course_val)
+        var count = 0;
+        if ( department_val.length > 0 ) {
+            let departments = $('.dep');
+            for (let i = 0; i < departments.length; i++) {
+                let textValue = (departments[i].innerText || departments[i].textContent).toUpperCase();
+                if (textValue == department_val) {
+                    departments[i].parentElement.style = 'display: content';
+                    count++;
+                    break;
+                }
+                else if ( textValue.indexOf(department_val) > -1 ) {
+                    departments[i].parentElement.style = 'display: content';
+                    count++;
+                } else {
+                    departments[i].parentElement.style = 'display: none';
+                }
             }
         }
-        $('#head')[0].style = (count > 0) ? 'display: content' : 'display: none';
+        
+        if ( course_val > 0) {
+            let course_numbers = $('.number');
+            for (let i = 0; i < course_numbers.length; i++) {
+                let textValue = course_numbers[i].innerText || course_numbers[i].textContent;
+                if (textValue.indexOf(course_val) > -1) {
+                    course_numbers[i].parentElement.style = 'display: content';
+                    count++;
+                } else {
+                    course_numbers[i].parentElement.style = 'display: none';
+                }
+            }
+        }
+
+        //$('.head')[0].style = (count > 0) ? 'display: content' : 'display: none';
     });
+
     $('#add_note').click( function() {
         var queryURLClass = new URLSearchParams(window.location.search).get("class");
         if (queryURLClass != null) {
@@ -110,7 +139,6 @@ $(document).ready(function() {
 });
 
 
-
 /**
  * @param {element} head
  * @param {array} courses 
@@ -120,9 +148,4 @@ function showCourses(head, courses) {
     for (let i = 0; i < courses.length; i++) {
         courses[i].style = 'display: content';
     }
-}
-
-function fun() {
-    console.log("TESTTT");
-    return true;
 }
