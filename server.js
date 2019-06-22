@@ -1,17 +1,12 @@
 const express = require('express');
 const fs = require('fs');
-const qs = require('querystring');
 const fileUpload = require('express-fileupload')
 const bodyParser = require('body-parser');
 const uuidv4 = require('uuid/v4');
 var path = require('path');
-const mongodb = require('mongodb');
-var formidable = require('formidable');
 var shell = require("shelljs");
-// Imports the Google Cloud client library
 const {Storage} = require('@google-cloud/storage');
- 
-
+const Trie = require('./backend/trie.js');
 const app = express();
 
 app.use(fileUpload({
@@ -19,10 +14,13 @@ app.use(fileUpload({
     tempFileDir : './tmp/'
 }));
 
+// Removes temp files in the tmp folder
+shell.rm('-rf', './tmp/*');
+
  // Creates a client
  const storage = new Storage({
      projectId: 'noteshare',
-     keyFilename: 'noteshare-c8ce1ca41a8d.json'
+     keyFilename: './backend/noteshare-c8ce1ca41a8d.json'
  });
 
 var BUCKET_NAME = 'noteshare';
@@ -30,13 +28,38 @@ const myBucket = storage.bucket(BUCKET_NAME);
 
 const port = 3000;
 
-
 const note = process.env.NOTESHARE;
 
 var classes = [];
 
 var notes = [];
 
+var note_topic_trie = new Trie();
+
+// Test for populating a trie
+var words = ["a", "at", "be", "bee", "egg"];
+for (let i = 0; i < words.length; i++) {
+    note_topic_trie.insert(words[i]);
+}
+console.log("a: " + note_topic_trie.search("a"));
+console.log("at: " + note_topic_trie.search("at"));
+console.log("b: " + note_topic_trie.search("b"));
+console.log("be: " + note_topic_trie.search("be"));
+console.log("beee: " + note_topic_trie.search("beee"));
+console.log("eg: " + note_topic_trie.search("eg"));
+console.log("egg: " + note_topic_trie.search("egg"));
+console.log("att: " + note_topic_trie.search("att"));
+
+console.log();
+
+console.log("a: " + note_topic_trie.unexact_search("a"));
+console.log("at: " + note_topic_trie.unexact_search("at"));
+console.log("b: " + note_topic_trie.unexact_search("b"));
+console.log("be: " + note_topic_trie.unexact_search("be"));
+console.log("beee: " + note_topic_trie.unexact_search("beee"));
+console.log("eg: " + note_topic_trie.unexact_search("eg"));
+console.log("egg: " + note_topic_trie.unexact_search("egg"));
+console.log("att: " + note_topic_trie.unexact_search("att"));
 
 const MongoClient = require('mongodb').MongoClient;
 const uri = 'mongodb+srv://user:' + note + '@noteshare-z8f3l.mongodb.net/test?retryWrites=true';
@@ -46,18 +69,16 @@ client.connect(function(err, db) {
         console.log("MongoDB Connection Failed");
         console.log(err);
       } else {
-          //console.log("MongoDB Connection Successful");
+          console.log("MongoDB Connection Successful");
           let dbo = db.db('Noteshare');
           //Query through the existing classes
           dbo.collection('Classes').find({}).toArray(function(err, result) {
               if (err) {
                   console.log("MongoDB Query All Classes Error");
               } else {
-                  //console.log(result.length);
                   for (var i = 0; i < result.length; i++) {
                       classes.push({department: result[i].department, number : result[i].number, name : result[i].name, uuid : result[i].uuid});
-                  }
-                  console.log(classes); 
+                  } 
               }
           });
 
@@ -66,11 +87,9 @@ client.connect(function(err, db) {
             if (err) {
                 console.log("MongoDB Query All Notes Error");
             } else {
-                console.log(result.length);
                 for (var i = 0; i < result.length; i++) {
                     notes.push({lecture_topic : result[i].lecture_topic, lecture_date : result[i].lecture_date, uuid : result[i].uuid, class_uuid : result[i].class_uuid, class_name : result[i].class_name, note_name : result[i].note_name, note_url : result[i].url});
                 }
-                console.log(notes);
             }
         });
       }
@@ -82,15 +101,10 @@ app.use(express.static(__dirname + '/notes/'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 function handleRoot(req, res) {
-    //console.log(process.env.NOTESHARE);
-    console.log(notes);
-    console.log(classes);
     res.redirect('/class_list');   
-   //res.sendFile(path.join(__dirname + '/frontend/home.html'));
 };
 
 function handleClassList(req, res) {
-    //console.log(classes);
     res.sendFile(path.join(__dirname + '/frontend/classList.html'));
 };
 
@@ -119,7 +133,7 @@ function handleSendCourse(req, res) {
                     if (err) {
                         console.log("MongoDB Insert Class Error");
                     } else {
-                        //console.log("MongoDB Insert Class Successful");
+
                     }
                 });   
             }
@@ -147,10 +161,7 @@ function handleSendNote(req, res) {
     var courseName = noteObject["name"];
     var lectureTopic = req.body.lecture_topic;
     var lectureDate = req.body.lecture_date;
-    console.log(lectureDate);
-    console.log(lectureTopic);
     var uuid = uuidv4();
-    console.log(req.files);
 
     var noteObject = {
         "uuid" : uuid,
@@ -162,17 +173,15 @@ function handleSendNote(req, res) {
         "lecture_topic" : lectureTopic,
         "lecture_date" : lectureDate
     }
-    console.log(noteObject);
 
     fs.rename('tmp/' + noteObject.tmp_name, 'tmp/' + noteObject.tmp_name + '.pdf', function(err) {
         if ( err ) console.log('Rename error: ' + err);
 
         myBucket.upload('tmp/' + noteObject.tmp_name + '.pdf', function(err, file) {
             if (err) {
-                console.log("GOOGLE ERROR");
+                console.log("Google Storage Error");
                 console.log(err);
             } else {
-                console.log("GOOGLE WORKS");
             }
         });
     });
@@ -197,7 +206,6 @@ function handleSendNote(req, res) {
         }
     });
 
-    //shell.rm('-r', 'tmp/*');
     notes.push({lecture_topic : noteObject.lecture_topic, lecture_date : noteObject.lecture_date, uuid : noteObject.uuid, class_uuid : noteObject.class_uuid, class_name : noteObject.class_name, note_name : noteObject.note_name, note_url : noteObject.url});
     res.redirect('/');
 }
@@ -249,10 +257,6 @@ function handleGetCoursesByDepartment(req, res) {
 }
 
 function handleNote(req, res) {
-    console.log(req.query);
-    //res.setHeader('Content-Type', 'application/pdf');
-    //res.setHeader('Content-Disposition', 'attachment');
-    //console.log(__dirname);
     res.sendFile(path.join(__dirname, 'notes', req.query.note));
 }
 
