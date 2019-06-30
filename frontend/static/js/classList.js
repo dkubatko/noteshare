@@ -3,7 +3,6 @@ $(document).ready(function() {
         type: "GET",
         url: "http://127.0.0.1:3000/get_classes",
         success: function(result) {
-            console.log(result);
             var usedDepartments = [];
             result.classes.forEach(function(course) {
                 var classURL = "/class_list?class=";
@@ -79,67 +78,77 @@ $(document).ready(function() {
     if ( queryURLClass && queryURLDep ) {
         $('#input').attr("placeholder", "Search for lectures...").blur();
         $('#input').on('input', function() {
-            if ($(this).val() == '') {
+            if ($(this).val().length == 0) {
                 showLectures($('#head')[0], $('#notes').find('tr:not(#head)'));
-                return;
-            }
-            $.ajax({
-                type: "GET",
-                url: "http://127.0.0.1:3000/get_lecture_name_trie?class=" + queryURLClass + "&val=" + $(this).val(),
-                success: function(result) {
-                    let display_arr = result.valid_searches.sort();
-                    let lectures = $('.note').sort( (element1, element2) => {
-                        if (element1.innerText == element2.innerText) {
-                            return 0;
-                        }
-                        return (element1.innerText < element2.innerText) ? -1 : 1; 
-                    });
-                    var display_index = 0;
-                    for ( let i = 0; i < lectures.length; i++ ) {
-                        if (display_arr[display_index] == lectures[i].innerText) {
-                            display_index++;
-                            lectures[i].parentElement.style = 'display: content';
-                        } else {
-                            lectures[i].parentElement.style = 'display: none';
+            } else {
+                $.ajax({
+                    type: "GET",
+                    url: "http://127.0.0.1:3000/get_lecture_name_trie?class=" + queryURLClass + "&val=" + $(this).val(),
+                    success: function(result) {
+                        let display_arr = result.valid_searches.sort();
+                        let lectures = $('.note').sort( (element1, element2) => {
+                            if (element1.innerText == element2.innerText) {
+                                return 0;
+                            }
+                            return (element1.innerText < element2.innerText) ? -1 : 1; 
+                        });
+                        var display_index = 0;
+                        for ( let i = 0; i < lectures.length; i++ ) {
+                            if (display_arr[display_index] == lectures[i].innerText) {
+                                display_index++;
+                                lectures[i].parentElement.style = 'display: content';
+                            } else {
+                                lectures[i].parentElement.style = 'display: none';
+                            }
                         }
                     }
-                }
-            }); 
+                }); 
+            }
         });
     } else {
         $('#input').on('input', function() {
-            if ($(this).val() == '') {
+            if ($(this).val().length == 0) {
                 showCourses($('.head')[0], $('tr:not(.head)'));
-                return;
-            }
-            let value = $(this).val().toUpperCase();
-            let index = (value.search(/\d/) > -1) ? value.search(/\d/) : value.length;
-            let department_val = value.substring(0, index);
-            let course_val = value.substring(index);
-            if ( department_val.length > 0 ) {
-                let departments = $('.dep');
-                for (let i = 0; i < departments.length; i++) {
-                    let textValue = (departments[i].innerText || departments[i].textContent).toUpperCase();
-                    if (textValue == department_val) {
-                        departments[i].parentElement.style = 'display: content';
-                        break;
+                showCourses($('.head')[0], $('.number'));
+            } else {
+                let value = $(this).val().toUpperCase();
+                let index = (value.search(/\d/) > -1) ? value.search(/\d/) : value.length;
+                let department_val = value.substring(0, index);
+                let course_val = value.substring(index);
+                if ( department_val.length > 0 ) {
+                    let departments = $('.dep');
+                    for (let i = 0; i < departments.length; i++) {
+                        let textValue = (departments[i].innerText || departments[i].textContent).toUpperCase();
+                        if (textValue == department_val) {
+                            departments[i].parentElement.style = 'display: content';
+                            if (queryURLDep) {
+                                if (textValue == queryURLDep) {
+                                    showCourses($('.head')[0], $('.number'));
+                                    showCourses($('.head')[0], $('tr:not(.head):not(.dep)'));
+                                } else {
+                                    course_val = -1;
+                                }
+                            }
+                            break;
+                        }
+                        else if ( textValue.indexOf(department_val) == 0 ) {
+                            departments[i].parentElement.style = 'display: content';
+                            hideCourses($('.head')[0], $('.number'));
+                        } else {
+                            departments[i].parentElement.style = 'display: none';
+                            hideCourses($('.head')[0], $('.number'));
+                        }
                     }
-                    else if ( textValue.indexOf(department_val) > -1 ) {
-                        departments[i].parentElement.style = 'display: content';
-                    } else {
-                        departments[i].parentElement.style = 'display: none';
-                    }
-                }
-            }
-            
-            if ( course_val > 0) {
-                let course_numbers = $('.number');
-                for (let i = 0; i < course_numbers.length; i++) {
-                    let textValue = course_numbers[i].innerText || course_numbers[i].textContent;
-                    if (textValue.indexOf(course_val) > -1) {
-                        course_numbers[i].parentElement.style = 'display: content';
-                    } else {
-                        course_numbers[i].parentElement.style = 'display: none';
+                }            
+                if ( course_val > 0) {
+                    let course_numbers = $('.number');
+                    for (let i = 0; i < course_numbers.length; i++) {
+                        let textValue = course_numbers[i].innerText || course_numbers[i].textContent;
+                        if (textValue.indexOf(course_val) == 0) {
+                            course_numbers[i].parentElement.style = 'display: content';
+                        } else {
+                            course_numbers[i].parentElement.style = 'display: none';
+                        }
                     }
                 }
             }
@@ -173,6 +182,21 @@ function showCourses(head, courses) {
     head.style = 'display: content';
     for (let i = 0; i < courses.length; i++) {
         courses[i].style = 'display: content';
+    }
+}
+
+/**
+ * Hides all courses, only displaying the table header
+ * 
+ * @param {element} head
+ *      The table header element, <th> 
+ * @param {array} courses 
+ *      The array of <tr> elements, represeting the courses in the table
+ */
+function hideCourses(head, courses) {
+    head.style = 'display: content';
+    for (let i = 0; i < courses.length; i++) {
+        courses[i].style = 'display: none';
     }
 }
 
