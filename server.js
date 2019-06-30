@@ -28,46 +28,20 @@ const myBucket = storage.bucket(BUCKET_NAME);
 
 const port = 3000;
 
-const note = process.env.NOTESHARE;
+const mongo_password = process.env.NOTESHARE;
 
 var classes = [];
 
 var notes = [];
 
-var note_topic_trie = new Trie();
-
-// Test for populating a trie
-var words = ["a", "at", "be", "bee", "egg"];
-for (let i = 0; i < words.length; i++) {
-    note_topic_trie.insert(words[i]);
-}
-console.log("a: " + note_topic_trie.search("a"));
-console.log("at: " + note_topic_trie.search("at"));
-console.log("b: " + note_topic_trie.search("b"));
-console.log("be: " + note_topic_trie.search("be"));
-console.log("beee: " + note_topic_trie.search("beee"));
-console.log("eg: " + note_topic_trie.search("eg"));
-console.log("egg: " + note_topic_trie.search("egg"));
-console.log("att: " + note_topic_trie.search("att"));
-
-console.log();
-
-console.log("a: " + note_topic_trie.unexact_search("a"));
-console.log("at: " + note_topic_trie.unexact_search("at"));
-console.log("b: " + note_topic_trie.unexact_search("b"));
-console.log("be: " + note_topic_trie.unexact_search("be"));
-console.log("beee: " + note_topic_trie.unexact_search("beee"));
-console.log("eg: " + note_topic_trie.unexact_search("eg"));
-console.log("egg: " + note_topic_trie.unexact_search("egg"));
-console.log("att: " + note_topic_trie.unexact_search("att"));
+var topic_trie_trees = {};
 
 const MongoClient = require('mongodb').MongoClient;
-const uri = 'mongodb+srv://user:' + note + '@noteshare-z8f3l.mongodb.net/test?retryWrites=true';
+const uri = 'mongodb+srv://user:' + mongo_password + '@noteshare-z8f3l.mongodb.net/test?retryWrites=true';
 const client = new MongoClient(uri, { useNewUrlParser: true });
 client.connect(function(err, db) {
     if (err) {
         console.log("MongoDB Connection Failed");
-        console.log(err);
       } else {
           console.log("MongoDB Connection Successful");
           let dbo = db.db('Noteshare');
@@ -78,6 +52,9 @@ client.connect(function(err, db) {
               } else {
                   for (var i = 0; i < result.length; i++) {
                       classes.push({department: result[i].department, number : result[i].number, name : result[i].name, uuid : result[i].uuid});
+                      if ( !topic_trie_trees[result[i].name] ) {
+                          topic_trie_trees[result[i].name] = new Trie();
+                      }
                   } 
               }
           });
@@ -89,6 +66,12 @@ client.connect(function(err, db) {
             } else {
                 for (var i = 0; i < result.length; i++) {
                     notes.push({lecture_topic : result[i].lecture_topic, lecture_date : result[i].lecture_date, uuid : result[i].uuid, class_uuid : result[i].class_uuid, class_name : result[i].class_name, note_name : result[i].note_name, note_url : result[i].url});
+                    class_name = "";
+                    class_name_arr = result[i].class_name.split("~");
+                    class_name_arr.forEach(element => {
+                        class_name += element + " ";
+                    });
+                    topic_trie_trees[class_name.substring(0, class_name.length-1)].insert(result[i].lecture_topic);
                 }
             }
         });
@@ -175,12 +158,11 @@ function handleSendNote(req, res) {
     }
 
     fs.rename('tmp/' + noteObject.tmp_name, 'tmp/' + noteObject.tmp_name + '.pdf', function(err) {
-        if ( err ) console.log('Rename error: ' + err);
+        if ( err ) console.log('Rename Error: ' + err);
 
         myBucket.upload('tmp/' + noteObject.tmp_name + '.pdf', function(err, file) {
             if (err) {
                 console.log("Google Storage Error");
-                console.log(err);
             } else {
             }
         });
@@ -189,7 +171,6 @@ function handleSendNote(req, res) {
     noteObject.url = "https://storage.googleapis.com/" + BUCKET_NAME + "/" + noteObject.tmp_name + ".pdf";
 
     //Add to note database  
-
     MongoClient.connect(uri, function(err, db) {
         if (err) {
             console.log("MongoDB Add Note Error");
@@ -207,6 +188,16 @@ function handleSendNote(req, res) {
     });
 
     notes.push({lecture_topic : noteObject.lecture_topic, lecture_date : noteObject.lecture_date, uuid : noteObject.uuid, class_uuid : noteObject.class_uuid, class_name : noteObject.class_name, note_name : noteObject.note_name, note_url : noteObject.url});
+    class_name_arr = noteObject.class_name.split("~");
+    class_name_str = "";
+    class_name_arr.forEach( (element) => {
+        class_name_str += element + " ";
+    });
+    class_name_str = class_name_str.substring(0, class_name_str.length-1);
+    if ( !topic_trie_trees[class_name_str] ) {
+        topic_trie_trees[class_name_str] = new Trie();
+    }
+    topic_trie_trees[class_name_str].insert(noteObject.lecture_topic);
     res.redirect('/');
 }
 
@@ -220,8 +211,6 @@ function handleGetNotes(req, res) {
         "count": 0,
         "class_num": -1
     }
-    console.log(req.query);
-    console.log(req.query.class);
     for (let i = 0; i < notes.length; i++) {
         if (notes[i].class_name == req.query.class) {
             if ( data.class_num == -1 ) {
@@ -260,6 +249,19 @@ function handleNote(req, res) {
     res.sendFile(path.join(__dirname, 'notes', req.query.note));
 }
 
+function handleGetLectureNameTrie(req, res) {
+    class_arr = req.query.class.split("~");
+    class_str = ""
+    class_arr.forEach( (element) => {
+        class_str += element + " "
+    });
+    class_str = class_str.substring(0, class_str.length-1)
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.send({"valid_searches" : topic_trie_trees[class_str].get_possible_searches(req.query.val)}); 
+
+}
+
 app.get('/', handleRoot);
 
 app.get('/class_list', handleClassList);
@@ -281,5 +283,7 @@ app.get('/get_notes', handleGetNotes);
 app.get('/note', handleNote);
 
 app.get('/get_courses_by_department', handleGetCoursesByDepartment);
+
+app.get('/get_lecture_name_trie', handleGetLectureNameTrie);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}...`));
